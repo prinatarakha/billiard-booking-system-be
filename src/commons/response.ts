@@ -17,6 +17,6 @@ export class APIResponse {
 
 export class ErrorResponse extends APIResponse {
   constructor(status: number, message: Error | string) {
-    super(status, message.toString());
+    super(status, { message: message.toString() });
   }
 }
