@@ -11,6 +11,6 @@ if (!migrationName) {
 try {
   execSync(`npx prisma migrate dev --name ${migrationName}`, { stdio: 'inherit' });
 } catch (error) {
-  console.error('Error running migration:', error.message);
+  console.error(`Error running migration '${migrationName}': '${error.message}'`);
   process.exit(1);
 }
