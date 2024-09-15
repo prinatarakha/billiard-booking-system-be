@@ -29,3 +29,9 @@ export class BadRequestResponse extends ErrorResponse {
     super(400, message?.toString() ?? "Bad Request");
   }
 }
+
+export class UnprocessableEntityResponse extends ErrorResponse {
+  constructor(message: Error | string | unknown = "Unprocessable Entity") {
+    super(422, message?.toString() ?? "Unprocessable Entity");
+  }
+}
