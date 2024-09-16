@@ -43,3 +43,15 @@ export const GetTableRequest = z.object({
     id: z.string().uuid()
   })
 });
+
+export const DeleteTableRequest = z.object({
+  params: z.object({
+    id: z.string().uuid()
+  })
+});
+
+export const UpdateTableRequest = z.object({
+  params: z.object({
+    id: z.string().uuid()
+  })
+});

@@ -9,7 +9,7 @@ export const createTable = async (params: {
   brand: string,
 }) => {
   try {
-    const existingTable = await DAO.getTableByNumber(params.number);
+    const existingTable = await DAO.getTable({number: params.number});
     if (existingTable) return new UnprocessableEntityResponse(`Table with number='${params.number}' has exists with id='${existingTable.id}'`);
     const table = await DAO.createTable(params);
     log(`create_table: table=${JSON.stringify(table)}`);
@@ -64,7 +64,7 @@ export const getTables = async (params: {
 
 export const getTable = async (params: { id: string }) => {
   try {
-    const table = await DAO.getTableById(params.id);
+    const table = await DAO.getTable({id: params.id});
     if (!table) return new NotFoundResponse(`Table with id='${params.id}' is not found`);
 
     const response: TableResponse = {
@@ -77,6 +77,48 @@ export const getTable = async (params: { id: string }) => {
     return new APIResponse(200, response).generate();
   } catch (err) {
     logError(`get_table - params: ${JSON.stringify(params)} - error: '${err}'`);
+    return new InternalServerErrorResponse(err).generate();
+  }
+}
+
+export const deleteTable = async (params: { id: string }) => {
+  try {
+    const table = await DAO.getTable({id: params.id});
+    if (!table) return new NotFoundResponse(`Table with id='${params.id}' is not found`);
+    
+    await DAO.deleteTable({id: params.id});
+
+    const response: TableResponse = {
+      id: table.id,
+      number: table.number,
+      brand: table.brand,
+      created_at: table.createdAt,
+      updated_at: table.updatedAt,
+    }
+    return new APIResponse(200, response).generate();
+  } catch (err) {
+    logError(`delete_table - params: ${JSON.stringify(params)} - error: '${err}'`);
+    return new InternalServerErrorResponse(err).generate();
+  }
+}
+
+export const updateTable = async (params: { id: string }) => {
+  try {
+    const table = await DAO.getTable({id: params.id});
+    if (!table) return new NotFoundResponse(`Table with id='${params.id}' is not found`);
+    
+    await DAO.deleteTable({id: params.id});
+
+    const response: TableResponse = {
+      id: table.id,
+      number: table.number,
+      brand: table.brand,
+      created_at: table.createdAt,
+      updated_at: table.updatedAt,
+    }
+    return new APIResponse(200, response).generate();
+  } catch (err) {
+    logError(`delete_table - params: ${JSON.stringify(params)} - error: '${err}'`);
     return new InternalServerErrorResponse(err).generate();
   }
 }

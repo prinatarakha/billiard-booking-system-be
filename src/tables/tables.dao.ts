@@ -8,15 +8,6 @@ export const createTable = async (data: Prisma.TableCreateInput) => {
   return result;
 }
 
-export const getTableByNumber = async (number: number) => {
-  const table = await prismaClient.table.findFirst({
-    where: {
-      number: number
-    }
-  });
-  return table;
-}
-
 export const getTables = async (filters: {
   skip: number, 
   take: number,
@@ -37,10 +28,20 @@ export const countTables = async () => {
   return count;
 }
 
-export const getTableById = async (id: string) => {
+export const getTable = async (filters: { 
+  id?: string,
+  number?: number,
+}) => {
   const table = await prismaClient.table.findFirst({
+    where: filters
+  });
+  return table;
+}
+
+export const deleteTable = async (filters: { id: string }) => {
+  const table = await prismaClient.table.delete({
     where: {
-      id: id
+      id: filters.id
     }
   });
   return table;

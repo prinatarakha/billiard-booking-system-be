@@ -21,3 +21,17 @@ export const getTable = async (req: Request, res: Response) => {
   const response = await Services.getTable(params);
   return res.status(response.status).json(response.data);
 }
+
+export const deleteTable = async (req: Request, res: Response) => {
+  const params = { id: req.params.id }
+  const response = await Services.deleteTable(params);
+  return res.status(response.status).json(response.data);
+}
+
+export const updateTable = async (req: Request, res: Response) => {
+  const params = { 
+    id: req.params.id,
+  }
+  const response = await Services.updateTable(params);
+  return res.status(response.status).json(response.data);
+}
