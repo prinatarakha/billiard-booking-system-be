@@ -15,3 +15,9 @@ export const getTables = async (req: Request, res: Response) => {
   const response = await Services.getTables(params);
   return res.status(response.status).json(response.data);
 }
+
+export const getTable = async (req: Request, res: Response) => {
+  const params = { id: req.params.id }
+  const response = await Services.getTable(params);
+  return res.status(response.status).json(response.data);
+}

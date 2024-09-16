@@ -36,3 +36,12 @@ export const countTables = async () => {
   const count = await prismaClient.table.count()
   return count;
 }
+
+export const getTableById = async (id: string) => {
+  const table = await prismaClient.table.findFirst({
+    where: {
+      id: id
+    }
+  });
+  return table;
+}

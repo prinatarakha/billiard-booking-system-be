@@ -24,3 +24,9 @@ export const getTablesDto = z.object({
     .optional(),
   })
 });
+
+export const getTableDto = z.object({
+  params: z.object({
+    id: z.string().uuid()
+  })
+});
