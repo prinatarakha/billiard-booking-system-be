@@ -2,6 +2,7 @@ import { InternalServerErrorResponse, NotFoundResponse, UnprocessableEntityRespo
 import { log, logError } from "../commons/log";
 import { APIResponse } from "../commons/response";
 import * as DAO from "./tables.dao";
+import { GetTablesResponse, TableResponse } from "./tables.dto";
 
 export const createTable = async (params: {
   number: number,
@@ -9,10 +10,18 @@ export const createTable = async (params: {
 }) => {
   try {
     const existingTable = await DAO.getTableByNumber(params.number);
-    if (existingTable) return new UnprocessableEntityResponse(`Table with number='${params.number}' has exists`);
+    if (existingTable) return new UnprocessableEntityResponse(`Table with number='${params.number}' has exists with id='${existingTable.id}'`);
     const table = await DAO.createTable(params);
     log(`create_table: table=${JSON.stringify(table)}`);
-    return new APIResponse(201, table).generate();
+
+    const response: TableResponse = {
+      id: table.id,
+      number: table.number,
+      brand: table.brand,
+      created_at: table.createdAt,
+      updated_at: table.updatedAt,
+    }
+    return new APIResponse(201, response).generate();
   } catch (err) {
     logError(`create_table: params: ${JSON.stringify(params)} - error: '${err}'`);
     return new InternalServerErrorResponse(err).generate();
@@ -21,7 +30,7 @@ export const createTable = async (params: {
 
 export const getTables = async (params: {
   page?: number,
-  pageSize?: number,
+  pageSize?: number, // same as "limit" in API request, and "take" in Prisma
 }) => {
   if (!params.page) params.page = 1;
   if (!params.pageSize) params.pageSize = 10;
@@ -33,13 +42,20 @@ export const getTables = async (params: {
     });
     const count = await DAO.countTables();
     const totalPages = Math.ceil(count / params.pageSize);
-    return new APIResponse(200, {
+    const response: GetTablesResponse = {
       page: params.page,
-      page_size: params.pageSize,
+      limit: params.pageSize,
       count: count,
       total_pages: totalPages,
-      tables: tables,
-    }).generate();
+      tables: tables.map((table) => ({
+        id: table.id,
+        number: table.number,
+        brand: table.brand,
+        created_at: table.createdAt,
+        updated_at: table.updatedAt,
+      } as TableResponse)),
+    }
+    return new APIResponse(200, response).generate();
   } catch (err) {
     logError(`get_tables - params: ${JSON.stringify(params)} - error: '${err}'`);
     return new InternalServerErrorResponse(err).generate();
@@ -50,7 +66,15 @@ export const getTable = async (params: { id: string }) => {
   try {
     const table = await DAO.getTableById(params.id);
     if (!table) return new NotFoundResponse(`Table with id='${params.id}' is not found`);
-    return new APIResponse(200, table);
+
+    const response: TableResponse = {
+      id: table.id,
+      number: table.number,
+      brand: table.brand,
+      created_at: table.createdAt,
+      updated_at: table.updatedAt,
+    }
+    return new APIResponse(200, response).generate();
   } catch (err) {
     logError(`get_table - params: ${JSON.stringify(params)} - error: '${err}'`);
     return new InternalServerErrorResponse(err).generate();

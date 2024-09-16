@@ -1,14 +1,23 @@
 import { z } from "zod";
 import * as Constants from "./tables.constants";
+import { PaginationResponse } from "../commons/dto";
 
-export const createTableDto = z.object({
+export const CreateTableRequest = z.object({
   body: z.object({
     number: z.number().int().min(1),
-    brand: z.enum([Constants.TableBrandsEnum.MRSUNG, ...Object.values(Constants.TableBrandsEnum)]),
+    brand: z.enum([Object.values(Constants.TableBrandsEnum)[0], ...Object.values(Constants.TableBrandsEnum).slice(1)]),
   })
 });
 
-export const getTablesDto = z.object({
+export type TableResponse = {
+  id: string,
+  number: number,
+  brand: string,
+  created_at: Date,
+  updated_at: Date,
+}
+
+export const GetTablesRequest = z.object({
   query: z.object({
     page: z
       .string()
@@ -25,7 +34,11 @@ export const getTablesDto = z.object({
   })
 });
 
-export const getTableDto = z.object({
+export type GetTablesResponse = PaginationResponse & {
+  tables: TableResponse[]
+}
+
+export const GetTableRequest = z.object({
   params: z.object({
     id: z.string().uuid()
   })
