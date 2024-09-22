@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
-// import threadsRoutes from './threads/threads.routes';
+import tablesRoutes from './tables/tables.routes';
 // import { verifyAPIKey } from './middlewares/auth';
 import { log } from './commons/log';
 
@@ -14,7 +14,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use(express.json());
 // app.use(verifyAPIKey());
-// app.use("/threads", threadsRoutes);
+app.use(tablesRoutes);
 
 
 const PORT = process.env.PORT || 8000;

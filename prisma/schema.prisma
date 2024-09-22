@@ -15,7 +15,7 @@ datasource db {
 
 model Table {
   id                String @id @unique @default(dbgenerated("gen_random_uuid()"))
-  number            Int @unique @default(autoincrement())
+  number            Int @default(autoincrement()) // uniqueness is handled in app level, so that an update of table number can be accepted.
   brand             String @default("mrsung")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now()) @updatedAt
