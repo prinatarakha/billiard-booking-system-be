@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import tablesRoutes from './tables/tables.routes';
+import tableOccupationRoutes from './tableOccupations/tableOccupations.routes';
 // import { verifyAPIKey } from './middlewares/auth';
 import { log } from './commons/log';
 
@@ -15,6 +16,8 @@ app.get("/", (req: Request, res: Response) => {
 app.use(express.json());
 // app.use(verifyAPIKey());
 app.use(tablesRoutes);
+app.use(tableOccupationRoutes);
+
 
 
 const PORT = process.env.PORT || 8000;
