@@ -50,8 +50,18 @@ export const DeleteTableRequest = z.object({
   })
 });
 
-export const UpdateTableRequest = z.object({
-  params: z.object({
-    id: z.string().uuid()
+export const UpdateTablesRequest = z.object({
+  body: z.object({
+    tables: z.array(z.object({
+      id: z.string().uuid(),
+      number: z.number().int().min(1).optional(),
+      brand: z
+        .enum([Object.values(Constants.TableBrandsEnum)[0], ...Object.values(Constants.TableBrandsEnum).slice(1)])
+        .optional(),
+    })).nonempty()
   })
 });
+
+export type UpdateTablesResponse = {
+  updated_tables: TableResponse[]
+}

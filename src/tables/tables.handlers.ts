@@ -28,10 +28,8 @@ export const deleteTable = async (req: Request, res: Response) => {
   return res.status(response.status).json(response.data);
 }
 
-export const updateTable = async (req: Request, res: Response) => {
-  const params = { 
-    id: req.params.id,
-  }
-  const response = await Services.updateTable(params);
+export const updateTables = async (req: Request, res: Response) => {
+  const params = { tables: req.body.tables }
+  const response = await Services.updateTables(params);
   return res.status(response.status).json(response.data);
 }

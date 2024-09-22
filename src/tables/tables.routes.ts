@@ -9,6 +9,6 @@ router.post("/v1/tables", validateRequest(DTO.CreateTableRequest), Handlers.crea
 router.get("/v1/tables", validateRequest(DTO.GetTablesRequest), Handlers.getTables);
 router.get("/v1/tables/:id", validateRequest(DTO.GetTableRequest), Handlers.getTable);
 router.delete("/v1/tables/:id", validateRequest(DTO.DeleteTableRequest), Handlers.deleteTable);
-// router.put("/v1/tables/:id", validateRequest(DTO.UpdateTableRequest), Handlers.updateTable);
+router.put("/v1/tables", validateRequest(DTO.UpdateTablesRequest), Handlers.updateTables);
 
 export default router;
