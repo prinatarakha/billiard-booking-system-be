@@ -2,10 +2,11 @@ import { z } from "zod";
 // import * as Constants from "./tableOccupations.constants";
 import { PaginationResponse } from "../commons/dto";
 
-export const CreateTableRequest = z.object({
+export const OccupyTableRequest = z.object({
   body: z.object({
-    number: z.number().int().min(1),
-    // brand: z.enum([Object.values(Constants.TableBrandsEnum)[0], ...Object.values(Constants.TableBrandsEnum).slice(1)]),
+    table_id: z.string().uuid(),
+    started_at: z.string().datetime({message: "must be in ISO string format. Example: '2023-09-28T14:45:00Z"}).optional(),
+    finished_at: z.string().datetime().optional(),
   })
 });
 

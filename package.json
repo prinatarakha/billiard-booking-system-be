@@ -25,6 +25,7 @@
   "homepage": "https://github.com/prinatarakha/billiard-booking-system#readme",
   "dependencies": {
     "@prisma/client": "^5.19.1",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "zod": "^3.23.8"
