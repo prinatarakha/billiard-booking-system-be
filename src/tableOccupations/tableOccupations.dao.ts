@@ -65,3 +65,16 @@ export const deleteTableOccupation = async (params: {
   });
   return result;
 }
+
+export const updateTableOccupation = async (params: {
+  filters: Prisma.TableOccupationWhereUniqueInput,
+  data: Prisma.TableOccupationUpdateInput,
+  trx?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+}) => {
+  if (!params.trx) params.trx = prismaClient;
+  const result = await params.trx.tableOccupation.update({
+    where: params.filters,
+    data: params.data,
+  });
+  return result;
+}

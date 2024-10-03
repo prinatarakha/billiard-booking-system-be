@@ -70,3 +70,14 @@ export type GetTableOccupationsResponse = PaginationResponse & {
   table_id: string | null,
   table_occupations: TableOccupationResponse[],
 }
+
+export const UpdateTableOccupationRequest = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+  body: z.object({
+    table_id: z.string().uuid().optional(),
+    started_at: z.string().datetime({message: "must be in ISO string format. Example: '2023-09-28T14:45:00Z"}).optional(),
+    finished_at: z.string().datetime().optional(),
+  })
+})

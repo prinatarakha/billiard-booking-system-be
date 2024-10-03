@@ -38,3 +38,16 @@ export const deleteTableOccupation = async (req: Request, res: Response) => {
   const response = await Services.deleteTableOccupation(params);
   return res.status(response.status).json(response.data);
 }
+
+export const updateTableOccupation = async (req: Request, res: Response) => {
+  const startedAt = new Date(req.body.started_at);
+  const finishedAt = new Date(req.body.finished_at);
+  const params = { 
+    id: req.params.id,
+    tableId: req.body.table_id, 
+    startedAt: !isNaN(startedAt.getTime()) ? startedAt : undefined, 
+    finishedAt: !isNaN(finishedAt.getTime()) ? finishedAt : undefined, 
+  };
+  const response = await Services.updateTableOccupation(params);
+  return res.status(response.status).json(response.data);
+}

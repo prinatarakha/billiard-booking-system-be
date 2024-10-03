@@ -195,3 +195,88 @@ export const deleteTableOccupation = async (params: {
     return new InternalServerErrorResponse(`Failed to delete table occupation with id='${params.id}'`).generate();
   }
 }
+
+export const updateTableOccupation = async (params: {
+  id: string,
+  tableId?: string,
+  startedAt?: Date,
+  finishedAt?: Date,
+}) => {
+  log(`update_table_occupation: params=${JSON.stringify(params)}`);
+
+  const now = new Date();
+  let isUpdated = false;
+
+  try {
+    const tableOccupation = await DAO.getTableOccupation({
+      filters: { id: params.id }
+    });
+    if (!tableOccupation) return new NotFoundResponse(`Table occupation with id='${params.id}' is not found.`).generate();
+
+    if (params.startedAt && !dayjs(params.startedAt).isSame(dayjs(tableOccupation.startedAt), "second")) {
+      isUpdated = true;
+      tableOccupation.startedAt = params.startedAt;
+    }
+    
+    if (params.finishedAt && !dayjs(params.finishedAt).isSame(dayjs(tableOccupation.finishedAt), "second")) {
+      isUpdated = true;
+      tableOccupation.finishedAt = params.finishedAt;
+    }
+
+    if (tableOccupation.finishedAt && dayjs(tableOccupation.finishedAt).isBefore(dayjs(tableOccupation.startedAt))) {
+      return new UnprocessableEntityResponse(`'finished_at' must be after ${tableOccupation.startedAt.toISOString()}.`).generate();
+    }
+
+    if (params.tableId && params.tableId !== tableOccupation.tableId) {
+      isUpdated = true;
+      const table = await TableDAO.getTable({ id: params.tableId });
+      if (!table) return new NotFoundResponse(`Table with id='${params.tableId}' is not found.`).generate();
+      tableOccupation.tableId = params.tableId;
+    }
+
+    if (isUpdated) {
+      const currentTableOccupations = await DAO.getTableOccupations({
+        filters: {
+          id: { not: tableOccupation.id },
+          tableId: tableOccupation.tableId,
+          startedAt: { lte: tableOccupation.startedAt },
+          OR: [
+            { finishedAt: { gte: tableOccupation.startedAt } },
+            { finishedAt: null }, // open table
+          ]
+        },
+        take: 1,
+      });
+  
+      if (currentTableOccupations.length) {
+        const currentOccupation = currentTableOccupations[0];
+        return new UnprocessableEntityResponse(`Table with id='${currentOccupation.id}' is currently occupied ${currentOccupation.finishedAt ? `until ${currentOccupation.finishedAt.toISOString()}.`: 'with no time limit.'}`).generate();
+      }
+
+      tableOccupation.updatedAt = now;
+      await DAO.updateTableOccupation({
+        filters: {id: params.id},
+        data: {
+          startedAt: tableOccupation.startedAt,
+          finishedAt: tableOccupation.finishedAt,
+          updatedAt: tableOccupation.updatedAt,
+          table: { connect: {id: tableOccupation.tableId } },
+        }
+      });
+    }
+
+    const response: TableOccupationResponse = {
+      id: tableOccupation.id,
+      table_id: tableOccupation.tableId,
+      started_at: tableOccupation.startedAt,
+      finished_at: tableOccupation.finishedAt,
+      created_at: tableOccupation.createdAt,
+      updated_at: tableOccupation.updatedAt,
+    }
+
+    return new APIResponse(200, response).generate();
+  } catch (err) {
+    logError(`update_table_occupation: params=${JSON.stringify(params)} - error: '${err}'`);
+    return new InternalServerErrorResponse(`Failed to update table occupation with id='${params.id}'`).generate();
+  }
+}
