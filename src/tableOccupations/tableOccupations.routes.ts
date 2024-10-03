@@ -9,6 +9,6 @@ router.post("/v1/table-occupations", validateRequest(DTO.OccupyTableRequest), Ha
 router.get("/v1/table-occupations", validateRequest(DTO.GetTableOccupationsRequest), Handlers.getTableOccupations);
 router.get("/v1/table-occupations/:id", validateRequest(DTO.GetTableOccupationRequest), Handlers.getTableOccupation);
 router.delete("/v1/table-occupations/:id", validateRequest(DTO.DeleteTableOccupationRequest), Handlers.deleteTableOccupation);
-// router.put("/v1/table-occupations", validateRequest(DTO.UpdateTablesRequest), Handlers.updateTables);
+router.put("/v1/table-occupations/:id", validateRequest(DTO.UpdateTableOccupationRequest), Handlers.updateTableOccupation);
 
 export default router;
