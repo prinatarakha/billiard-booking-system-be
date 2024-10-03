@@ -27,7 +27,7 @@ export const createTable = async (params: {
     return new APIResponse(201, response).generate();
   } catch (err) {
     logError(`create_table: params=${JSON.stringify(params)} - error: '${err}'`);
-    return new InternalServerErrorResponse(err).generate();
+    return new InternalServerErrorResponse(`Failed to create new table`).generate();
   }
 }
 
@@ -61,7 +61,7 @@ export const getTables = async (params: {
     return new APIResponse(200, response).generate();
   } catch (err) {
     logError(`get_tables: params=${JSON.stringify(params)} - error: '${err}'`);
-    return new InternalServerErrorResponse(err).generate();
+    return new InternalServerErrorResponse(`Failed to get tables`).generate();
   }
 }
 
@@ -80,7 +80,7 @@ export const getTable = async (params: { id: string }) => {
     return new APIResponse(200, response).generate();
   } catch (err) {
     logError(`get_table: params=${JSON.stringify(params)} - error: '${err}'`);
-    return new InternalServerErrorResponse(err).generate();
+    return new InternalServerErrorResponse(`Failed to get a table with id='${params.id}'`).generate();
   }
 }
 
@@ -101,7 +101,7 @@ export const deleteTable = async (params: { id: string }) => {
     return new APIResponse(200, response).generate();
   } catch (err) {
     logError(`delete_table: params=${JSON.stringify(params)} - error: '${err}'`);
-    return new InternalServerErrorResponse(err).generate();
+    return new InternalServerErrorResponse(`Failed to delete a table with id='${params.id}'`).generate();
   }
 }
 
@@ -182,6 +182,6 @@ export const updateTables = async (params: {
     if (err instanceof ErrorResponse) return err.generate();
 
     logError(`update_tables: params=${JSON.stringify(params)} - error: '${err}'`);
-    return new InternalServerErrorResponse(err).generate();
+    return new InternalServerErrorResponse(`Failed to update tables`).generate();
   }
 }
