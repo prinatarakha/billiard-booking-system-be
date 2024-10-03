@@ -15,8 +15,17 @@ export const OccupyTableRequest = z.object({
 export const GetTableOccupationRequest = z.object({
   params: z.object({
     id: z.string().uuid(),
+  }),
+  query: z.object({
+    with_table: z.string().optional(),
   })
-})
+});
+
+export const DeleteTableOccupationRequest = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  })
+});
 
 export type TableOccupationResponse = {
   id: string,

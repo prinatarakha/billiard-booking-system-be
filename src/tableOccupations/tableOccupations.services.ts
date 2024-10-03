@@ -68,7 +68,7 @@ export const occupyTable = async (params: {
     return new APIResponse(201, response).generate();
   } catch (err) {
     logError(`occupy_table: params=${JSON.stringify(params)} - error: '${err}'`);
-    return new InternalServerErrorResponse(err).generate();
+    return new InternalServerErrorResponse(`Failed to occupy a table with id='${params.tableId}'`).generate();
   }
 }
 
@@ -122,7 +122,7 @@ export const getTableOccupations = async (params: {
     return new APIResponse(200, response).generate();
   } catch (err) {
     logError(`get_table_occupations: params=${JSON.stringify(params)} - error: '${err}'`);
-    return new InternalServerErrorResponse(err).generate();
+    return new InternalServerErrorResponse(`Failed to get table occupations`).generate();
   }
 }
 
@@ -163,6 +163,35 @@ export const getTableOccupation = async (params: {
     return new APIResponse(200, response).generate();
   } catch (err) {
     logError(`get_table_occupation: params=${JSON.stringify(params)} - error: '${err}'`);
-    return new InternalServerErrorResponse(err).generate();
+    return new InternalServerErrorResponse(`Failed to get table occupation with id='${params.id}' with table='${params.withTable || false}'`).generate();
+  }
+}
+
+export const deleteTableOccupation = async (params: {
+  id: string,
+}) => {
+  log(`delete_table_occupation: params=${JSON.stringify(params)}`);
+
+  try {
+    const tableOccupation = await DAO.getTableOccupation({
+      filters: { id: params.id }
+    });
+    if (!tableOccupation) return new NotFoundResponse(`Table occupation with id='${params.id}' is not found.`).generate();
+
+    await DAO.deleteTableOccupation({ filters: {id: params.id} });
+
+    const response: TableOccupationResponse = {
+      id: tableOccupation.id,
+      table_id: tableOccupation.tableId,
+      started_at: tableOccupation.startedAt,
+      finished_at: tableOccupation.finishedAt,
+      created_at: tableOccupation.createdAt,
+      updated_at: tableOccupation.updatedAt,
+    }
+
+    return new APIResponse(200, response).generate();
+  } catch (err) {
+    logError(`delete_table_occupation: params=${JSON.stringify(params)} - error: '${err}'`);
+    return new InternalServerErrorResponse(`Failed to delete table occupation with id='${params.id}'`).generate();
   }
 }

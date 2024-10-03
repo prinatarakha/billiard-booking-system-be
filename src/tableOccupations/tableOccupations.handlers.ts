@@ -25,7 +25,16 @@ export const getTableOccupations = async (req: Request, res: Response) => {
 }
 
 export const getTableOccupation = async (req: Request, res: Response) => {
-  const params = { id: req.params.id as string };
+  const params = { 
+    id: req.params.id as string,
+    withTable: req.query.with_table === "true",
+  };
   const response = await Services.getTableOccupation(params);
+  return res.status(response.status).json(response.data);
+}
+
+export const deleteTableOccupation = async (req: Request, res: Response) => {
+  const params = { id: req.params.id as string };
+  const response = await Services.deleteTableOccupation(params);
   return res.status(response.status).json(response.data);
 }
