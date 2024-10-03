@@ -54,3 +54,14 @@ export const countTableOccupations = async (params: {
   })
   return count;
 }
+
+export const deleteTableOccupation = async (params: {
+  filters: Prisma.TableOccupationWhereUniqueInput,
+  trx?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+}) => {
+  if (!params.trx) params.trx = prismaClient;
+  const result = await params.trx.tableOccupation.delete({
+    where: params.filters,
+  });
+  return result;
+}
