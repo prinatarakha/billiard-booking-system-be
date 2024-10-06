@@ -1,4 +1,4 @@
-export const WaitingListEntryStatuses = {
+export const WaitingListStatusEnums = {
   QUEUED: "queued",
   CANCELLED: "cancelled",
   EXPIRED: "expired",

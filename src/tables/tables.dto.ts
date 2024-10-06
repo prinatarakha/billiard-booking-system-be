@@ -21,13 +21,15 @@ export const GetTablesRequest = z.object({
   query: z.object({
     page: z
       .string()
-      .transform((val) => parseInt(val, 10)).refine((val) => !isNaN(val) && val > 0, {
+      .transform((val) => parseInt(val, 10))
+      .refine((val) => !isNaN(val) && val > 0, {
         message: `Page must be a positive integer value`
       })
       .optional(),
     limit: z
       .string()
-      .transform((val) => parseInt(val, 10)).refine((val) => !isNaN(val) && val > 0, {
+      .transform((val) => parseInt(val, 10))
+      .refine((val) => !isNaN(val) && val > 0, {
         message: `Limit must be a positive integer value`
       })
       .optional(),

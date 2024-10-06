@@ -5,7 +5,7 @@ import { APIResponse, ErrorResponse } from "../commons/response";
 import * as DAO from "./waitingList.dao";
 import * as Constants from "./waitingList.constants";
 import * as TableDAO from "../tables/tables.dao";
-import { WaitingListEntryResponse } from "./waitingList.dto";
+import { GetWaitingListEntriesResponse, WaitingListEntryResponse } from "./waitingList.dto";
 import prismaClient from "../db";
 
 export const createWaitingListEntry = async (params: {
@@ -20,7 +20,7 @@ export const createWaitingListEntry = async (params: {
     const waitingListEntryInput: Prisma.WaitingListCreateInput = {
       customerName: params.customerName,
       customerPhone: params.customerPhone,
-      status: Constants.WaitingListEntryStatuses.QUEUED,
+      status: Constants.WaitingListStatusEnums.QUEUED,
       createdAt: now,
       updatedAt: now,
     }
@@ -51,36 +51,65 @@ export const createWaitingListEntry = async (params: {
   }
 }
 
-// export const getTables = async (params: {
-//   page?: number,
-//   pageSize?: number, // same as "limit" in API request, and "take" in Prisma
-// }) => {
-//   if (!params.page) params.page = 1;
-//   if (!params.pageSize) params.pageSize = 10;
+export const getWaitingListEntries = async (params: {
+  page?: number,
+  pageSize?: number, // same as "limit" in API request, and "take" in Prisma
+  tableId?: string,
+  statuses: string[],
+}) => {
+  if (!params.page) params.page = 1;
+  if (!params.pageSize) params.pageSize = 10;
+  if (!params.statuses.length) params.statuses.push(Constants.WaitingListStatusEnums.QUEUED); // default status query is "queued"
 
-//   try {
-//     const tables = await DAO.getTables({
-//       skip: (params.page - 1) * params.pageSize,  // Skip the previous pages
-//       take: params.pageSize,
-//     });
-//     const count = await DAO.countTables();
-//     const totalPages = Math.ceil(count / params.pageSize);
-//     const response: GetTablesResponse = {
-//       page: params.page,
-//       limit: params.pageSize,
-//       count: count,
-//       total_pages: totalPages,
-//       tables: tables.map((table) => ({
-//         id: table.id,
-//         number: table.number,
-//         brand: table.brand,
-//         created_at: table.createdAt,
-//         updated_at: table.updatedAt,
-//       } as WaitingListEntryResponse)),
-//     }
-//     return new APIResponse(200, response).generate();
-//   } catch (err) {
-//     logError(`get_tables: params=${JSON.stringify(params)} - error: '${err}'`);
-//     return new InternalServerErrorResponse(`Failed to get tables`).generate();
-//   }
-// }
+  try {
+    const filters: Prisma.WaitingListWhereInput = {};
+    if (params.tableId) {
+      filters.tableId = params.tableId;
+    }
+    if (params.statuses.length) {
+      const andOperator = filters.AND 
+        ? Array.isArray(filters.AND) ? filters.AND : [filters.AND]
+        : [];
+      params.statuses.forEach((status) => {
+        if (status.charAt(0) === "!") {
+          andOperator.push({ NOT: {status: status}});
+        } else {
+          andOperator.push({status: status});
+        }
+      })
+    }
+
+    const waitingListEntries = await DAO.getWaitingListEntries({
+      skip: (params.page - 1) * params.pageSize,  // Skip the previous pages
+      take: params.pageSize,
+      filters,
+    });
+
+    const count = await DAO.countWaitingListEntries({filters});
+    const totalPages = Math.ceil(count / params.pageSize);
+
+    const response: GetWaitingListEntriesResponse = {
+      page: params.page,
+      limit: params.pageSize,
+      count: count,
+      total_pages: totalPages,
+      table_id: params.tableId || null,
+      statuses: params.statuses,
+      waiting_list_entries: waitingListEntries.map((waitingListEntry) => ({
+        id: waitingListEntry.id,
+        customer_name: waitingListEntry.customerName,
+        customer_phone: waitingListEntry.customerPhone,
+        status: waitingListEntry.status,
+        table_id: waitingListEntry.tableId,
+        table_occupation_id: waitingListEntry.tableOccupationId,
+        created_at: waitingListEntry.createdAt,
+        updated_at: waitingListEntry.updatedAt,
+      } as WaitingListEntryResponse)),
+    }
+    
+    return new APIResponse(200, response).generate();
+  } catch (err) {
+    logError(`get_waiting_list_entries: params=${JSON.stringify(params)} - error: '${err}'`);
+    return new InternalServerErrorResponse(`Failed to get waiting list entries`).generate();
+  }
+}
