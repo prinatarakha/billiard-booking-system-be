@@ -78,4 +78,10 @@ export const GetWaitingListEntryRequest = z.object({
     with_table: z.enum(["true", "false"]).optional(),
     with_table_occupation: z.enum(["true", "false"]).optional(),
   })
-})
+});
+
+export const DeleteWaitingListEntryRequest = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+});

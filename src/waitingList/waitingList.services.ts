@@ -184,3 +184,32 @@ export const getWaitingListEntry = async (params: {
     return new InternalServerErrorResponse(`Failed to get waiting list entry`).generate();
   }
 }
+
+export const deleteWaitingListEntry = async (params: {
+  id: string,
+}) => {
+  log(`delete_waiting_list_entry: params=${JSON.stringify(params)}`);
+
+  try {
+    const waitingListEntry = await DAO.getWaitingListEntry({ filters: {id: params.id} });
+    if (!waitingListEntry) return new NotFoundResponse(`Waiting list entry with id='${params.id}' is not found`).generate();
+
+    await DAO.deleteWaitingListEntry({ filters: {id: params.id} });
+    
+    const response: WaitingListEntryResponse = {
+      id: waitingListEntry.id,
+      customer_name: waitingListEntry.customerName,
+      customer_phone: waitingListEntry.customerPhone,
+      status: waitingListEntry.status,
+      table_id: waitingListEntry.tableId,
+      table_occupation_id: waitingListEntry.tableOccupationId,
+      created_at: waitingListEntry.createdAt,
+      updated_at: waitingListEntry.updatedAt,
+    }
+
+    return new APIResponse(200, response).generate();
+  } catch (err) {
+    logError(`delete_waiting_list_entry: params=${JSON.stringify(params)} - error: '${err}'`);
+    return new InternalServerErrorResponse(`Failed to delete waiting list entry`).generate();
+  }
+}
