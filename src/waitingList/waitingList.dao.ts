@@ -38,17 +38,28 @@ export const countWaitingListEntries = async (params: {
   if (!params.trx) params.trx = prismaClient;
   const count = await params.trx.waitingList.count({
     where: params.filters,
-  })
+  });
   return count;
 }
 
 export const getWaitingListEntry = async (params: {
-  filters?: Prisma.WaitingListWhereUniqueInput,
+  filters: Prisma.WaitingListWhereUniqueInput,
   trx?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
 }) => {
   if (!params.trx) params.trx = prismaClient;
-  const count = await params.trx.waitingList.findFirst({
+  const result = await params.trx.waitingList.findFirst({
     where: params.filters,
-  })
-  return count;
+  });
+  return result;
+}
+
+export const deleteWaitingListEntry = async (params: {
+  filters: Prisma.WaitingListWhereUniqueInput,
+  trx?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+}) => {
+  if (!params.trx) params.trx = prismaClient;
+  const result = await params.trx.waitingList.delete({
+    where: params.filters,
+  });
+  return result;
 }
