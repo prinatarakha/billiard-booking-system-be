@@ -7,8 +7,8 @@ const router = express.Router();
 
 router.post("/v1/waiting-list", validateRequest(DTO.CreateWaitingListEntryRequest), Handlers.createWaitingListEntry);
 router.get("/v1/waiting-list", validateRequest(DTO.GetWaitingListEntriesRequest), Handlers.getWaitingListEntries);
-// router.get("/v1/waiting-list/:id", validateRequest(DTO.GetTableRequest), Handlers.getTable);
-// router.delete("/v1/waiting-list/:id", validateRequest(DTO.DeleteTableRequest), Handlers.deleteTable);
-// router.put("/v1/waiting-list", validateRequest(DTO.UpdateTablesRequest), Handlers.updateTables);
+router.get("/v1/waiting-list/:id", validateRequest(DTO.GetWaitingListEntryRequest), Handlers.getWaitingListEntry);
+// router.delete("/v1/waiting-list/:id", validateRequest(DTO.DeleteWaitingListEntryRequest), Handlers.deleteWaitingListEntry);
+// router.put("/v1/waiting-list", validateRequest(DTO.UpdateWaitingListEntriesRequest), Handlers.updateWaitingListEntries);
 
 export default router;

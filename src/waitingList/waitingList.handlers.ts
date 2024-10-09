@@ -27,3 +27,13 @@ export const getWaitingListEntries = async (req: Request, res: Response) => {
   const response = await Services.getWaitingListEntries(params);
   return res.status(response.status).json(response.data);
 }
+
+export const getWaitingListEntry = async (req: Request, res: Response) => {
+  const params = { 
+    id: req.params.id as string,
+    withTable: req.query.with_table === "true",
+    withTableOccupation: req.query.with_table_occupation === "true",
+  };
+  const response = await Services.getWaitingListEntry(params);
+  return res.status(response.status).json(response.data);
+}

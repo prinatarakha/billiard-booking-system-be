@@ -5,8 +5,11 @@ import { APIResponse, ErrorResponse } from "../commons/response";
 import * as DAO from "./waitingList.dao";
 import * as Constants from "./waitingList.constants";
 import * as TableDAO from "../tables/tables.dao";
+import * as TableOccupationDAO from "../tableOccupations/tableOccupations.dao";
 import { GetWaitingListEntriesResponse, WaitingListEntryResponse } from "./waitingList.dto";
 import prismaClient from "../db";
+import { TableResponse } from "../tables/tables.dto";
+import { TableOccupationResponse } from "../tableOccupations/tableOccupations.dto";
 
 export const createWaitingListEntry = async (params: {
   customerName: string,
@@ -82,10 +85,16 @@ export const getWaitingListEntries = async (params: {
       filters.AND = andOperator;
     }
 
+    const sort = {
+      fieldName: "createdAt",
+      order: "asc",
+    }
+
     const waitingListEntries = await DAO.getWaitingListEntries({
       skip: (params.page - 1) * params.pageSize,  // Skip the previous pages
       take: params.pageSize,
       filters,
+      sort,
     });
 
     const count = await DAO.countWaitingListEntries({filters});
@@ -114,5 +123,64 @@ export const getWaitingListEntries = async (params: {
   } catch (err) {
     logError(`get_waiting_list_entries: params=${JSON.stringify(params)} - error: '${err}'`);
     return new InternalServerErrorResponse(`Failed to get waiting list entries`).generate();
+  }
+}
+
+export const getWaitingListEntry = async (params: {
+  id: string,
+  withTable?: boolean,
+  withTableOccupation?: boolean,
+}) => {
+  log(`get_waiting_list_entry: params=${JSON.stringify(params)}`);
+
+  try {
+    const waitingListEntry = await DAO.getWaitingListEntry({ filters: {id: params.id} });
+    if (!waitingListEntry) {
+      log(`get_waiting_list_entry: waiting list entry with id='${params.id}' is not found`);
+      return new NotFoundResponse(`Waiting list entry with id='${params.id}' is not found`).generate();
+    }
+    
+    const response: WaitingListEntryResponse = {
+      id: waitingListEntry.id,
+      customer_name: waitingListEntry.customerName,
+      customer_phone: waitingListEntry.customerPhone,
+      status: waitingListEntry.status,
+      table_id: waitingListEntry.tableId,
+      table_occupation_id: waitingListEntry.tableOccupationId,
+      created_at: waitingListEntry.createdAt,
+      updated_at: waitingListEntry.updatedAt,
+    }
+
+    if (waitingListEntry.tableId && params.withTable) {
+      const table = await TableDAO.getTable({ id: waitingListEntry.tableId });
+      if (!table) throw new Error(`Table with id='${waitingListEntry.tableId}' of waiting list entry with id='${waitingListEntry.id}' is not found.`);
+
+      response.table = {
+        id: table.id,
+        number: table.number,
+        brand: table.brand,
+        created_at: table.createdAt,
+        updated_at: table.updatedAt,
+      } as TableResponse
+    }
+
+    if (waitingListEntry.tableOccupationId && params.withTableOccupation) {
+      const tableOccupation = await TableOccupationDAO.getTableOccupation({ filters: {id: waitingListEntry.tableOccupationId} });
+      if (!tableOccupation) throw new Error(`Table occupation with id='${waitingListEntry.tableOccupationId}' of waiting list entry with id='${waitingListEntry.id}' is not found.`);
+
+      response.table_occupation = {
+        id: tableOccupation.id,
+        table_id: tableOccupation.tableId,
+        started_at: tableOccupation.startedAt,
+        finished_at: tableOccupation.finishedAt,
+        created_at: tableOccupation.createdAt,
+        updated_at: tableOccupation.updatedAt,
+      } as TableOccupationResponse
+    }
+
+    return new APIResponse(200, response).generate();
+  } catch (err) {
+    logError(`get_waiting_list_entry: params=${JSON.stringify(params)} - error: '${err}'`);
+    return new InternalServerErrorResponse(`Failed to get waiting list entry`).generate();
   }
 }

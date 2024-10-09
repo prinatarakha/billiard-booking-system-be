@@ -41,3 +41,14 @@ export const countWaitingListEntries = async (params: {
   })
   return count;
 }
+
+export const getWaitingListEntry = async (params: {
+  filters?: Prisma.WaitingListWhereUniqueInput,
+  trx?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+}) => {
+  if (!params.trx) params.trx = prismaClient;
+  const count = await params.trx.waitingList.findFirst({
+    where: params.filters,
+  })
+  return count;
+}

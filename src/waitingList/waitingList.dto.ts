@@ -1,6 +1,8 @@
 import { z } from "zod";
 import * as Constants from "./waitingList.constants";
 import { PaginationResponse } from "../commons/dto";
+import { TableResponse } from "../tables/tables.dto";
+import { TableOccupationResponse } from "../tableOccupations/tableOccupations.dto";
 
 export const CreateWaitingListEntryRequest = z.object({
   body: z.object({
@@ -24,6 +26,8 @@ export type WaitingListEntryResponse = {
   table_occupation_id: string | null,
   created_at: Date,
   updated_at: Date,
+  table?: TableResponse,
+  table_occupation?: TableOccupationResponse,
 }
 
 export const GetWaitingListEntriesRequest = z.object({
@@ -65,3 +69,13 @@ export type GetWaitingListEntriesResponse = PaginationResponse & {
   statuses: string[],
   waiting_list_entries: WaitingListEntryResponse[],
 }
+
+export const GetWaitingListEntryRequest = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+  query: z.object({
+    with_table: z.enum(["true", "false"]).optional(),
+    with_table_occupation: z.enum(["true", "false"]).optional(),
+  })
+})
