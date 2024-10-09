@@ -61,6 +61,8 @@ export const getWaitingListEntries = async (params: {
   if (!params.pageSize) params.pageSize = 10;
   if (!params.statuses.length) params.statuses.push(Constants.WaitingListStatusEnums.QUEUED); // default status query is "queued"
 
+  log(`get_waiting_list_entries: params=${JSON.stringify(params)}`);
+
   try {
     const filters: Prisma.WaitingListWhereInput = {};
     if (params.tableId) {
@@ -76,7 +78,8 @@ export const getWaitingListEntries = async (params: {
         } else {
           andOperator.push({status: status});
         }
-      })
+      });
+      filters.AND = andOperator;
     }
 
     const waitingListEntries = await DAO.getWaitingListEntries({
