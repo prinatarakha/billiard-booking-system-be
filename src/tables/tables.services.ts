@@ -38,6 +38,8 @@ export const getTables = async (params: {
   if (!params.page) params.page = 1;
   if (!params.pageSize) params.pageSize = 10;
 
+  log(`get_tables: params=${JSON.stringify(params)}`);
+
   try {
     const tables = await DAO.getTables({
       skip: (params.page - 1) * params.pageSize,  // Skip the previous pages
@@ -66,6 +68,8 @@ export const getTables = async (params: {
 }
 
 export const getTable = async (params: { id: string }) => {
+  log(`get_table: params=${JSON.stringify(params)}`);
+
   try {
     const table = await DAO.getTable({id: params.id});
     if (!table) return new NotFoundResponse(`Table with id='${params.id}' is not found`);
@@ -85,6 +89,8 @@ export const getTable = async (params: { id: string }) => {
 }
 
 export const deleteTable = async (params: { id: string }) => {
+  log(`delete_table: params=${JSON.stringify(params)}`);
+
   try {
     const table = await DAO.getTable({id: params.id});
     if (!table) return new NotFoundResponse(`Table with id='${params.id}' is not found`);
