@@ -59,6 +59,11 @@ export const getWaitingListEntries = async (params: {
   pageSize?: number, // same as "limit" in API request, and "take" in Prisma
   tableId?: string,
   statuses: string[],
+
+  // FIXME: filter by customer name and phone, createdAt
+  // customerName?: string,
+  // customerPhone?: string,
+  // day?: string, // the day of createdAt
 }) => {
   if (!params.page) params.page = 1;
   if (!params.pageSize) params.pageSize = 10;
@@ -211,5 +216,118 @@ export const deleteWaitingListEntry = async (params: {
   } catch (err) {
     logError(`delete_waiting_list_entry: params=${JSON.stringify(params)} - error: '${err}'`);
     return new InternalServerErrorResponse(`Failed to delete waiting list entry`).generate();
+  }
+}
+
+export const updateWaitingListEntry = async (params: {
+  id: string,
+  customerName: string | undefined, 
+  customerPhone: string | undefined,
+  tableId: string | null | undefined, // null means removing table
+  tableOccupationId: string | null | undefined, // null means removing table occupation
+  status: string | undefined,
+}) => {
+  log(`update_waiting_list_entry: params=${JSON.stringify(params)}`);
+
+  try {
+    const waitingListEntry = await DAO.getWaitingListEntry({ filters: {id: params.id} });
+    if (!waitingListEntry) {
+      log(`update_waiting_list_entry: waiting list entry with id='${params.id}' is not found`);
+      return new NotFoundResponse(`Waiting list entry with id='${params.id}' is not found`).generate();
+    }
+
+    let isUpdated = false;
+    
+    if (params.customerName && waitingListEntry.customerName !== params.customerName) {
+      waitingListEntry.customerName = params.customerName;
+      isUpdated = true;
+    }
+
+    if (params.customerPhone && waitingListEntry.customerPhone !== params.customerPhone) {
+      waitingListEntry.customerPhone = params.customerPhone;
+      isUpdated = true;
+    }
+
+    // change preferred table
+    if (params.tableId && waitingListEntry.tableId !== params.tableId) {
+      const table = await TableDAO.getTable({ id: params.tableId });
+      if (!table) return new NotFoundResponse(`Table with id='${params.tableId}' is not found`).generate();
+      waitingListEntry.tableId = params.tableId;
+      isUpdated = true;
+    }
+
+    // remove preferred table
+    if (params.tableId === null && waitingListEntry.tableId !== null) {
+      waitingListEntry.tableId = null;
+      isUpdated = true;
+    }
+
+    // change table occupation
+    if (params.tableOccupationId && waitingListEntry.tableOccupationId !== params.tableOccupationId) {
+      const tableOccupation = await TableOccupationDAO.getTableOccupation({ filters: {id: params.tableOccupationId} });
+      if (!tableOccupation) return new NotFoundResponse(`Table occupation with id='${params.tableOccupationId}' is not found`).generate();
+      waitingListEntry.tableOccupationId = params.tableOccupationId;
+      isUpdated = true;
+    }
+
+    // remove table occupation
+    if (params.tableOccupationId === null && waitingListEntry.tableOccupationId !== null) {
+      waitingListEntry.tableOccupationId = null;
+      isUpdated = true;
+    }
+
+    if (params.status && waitingListEntry.status !== params.status) {
+      if (params.status === Constants.WaitingListStatusEnums.FULFILLED && 
+        !waitingListEntry.tableOccupationId
+      ) {
+        return new UnprocessableEntityResponse(`Fulfilled waiting list entry must have table occupation`).generate();
+      }
+
+      waitingListEntry.status = params.status;
+      isUpdated = true;
+    }
+
+    if (waitingListEntry.status !== Constants.WaitingListStatusEnums.FULFILLED) {
+      // queued, cancelled, and expired status can't have table occupation
+      waitingListEntry.tableOccupationId = null;
+    }
+
+    if (isUpdated) {
+      waitingListEntry.updatedAt = new Date();
+      
+      await DAO.updateWaitingListEntry({
+        filters: {id: params.id},
+        data: {
+          customerName: waitingListEntry.customerName,
+          customerPhone: waitingListEntry.customerPhone,
+          table: waitingListEntry.tableId
+            ? { connect: {id: waitingListEntry.tableId } }
+            : { disconnect: true },
+          tableOccupation: waitingListEntry.tableOccupationId
+            ? { connect: {id: waitingListEntry.tableOccupationId } }
+            : { disconnect: true },
+          status: waitingListEntry.status,
+          updatedAt: waitingListEntry.updatedAt,
+        }
+      });
+
+      log(`update_waiting_list_entry: updated_entry=${JSON.stringify(waitingListEntry)}`);
+    }
+
+    const response: WaitingListEntryResponse = {
+      id: waitingListEntry.id,
+      customer_name: waitingListEntry.customerName,
+      customer_phone: waitingListEntry.customerPhone,
+      status: waitingListEntry.status,
+      table_id: waitingListEntry.tableId,
+      table_occupation_id: waitingListEntry.tableOccupationId,
+      created_at: waitingListEntry.createdAt,
+      updated_at: waitingListEntry.updatedAt,
+    }
+
+    return new APIResponse(200, response).generate();
+  } catch (err) {
+    logError(`update_waiting_list_entry: params=${JSON.stringify(params)} - error: '${err}'`);
+    return new InternalServerErrorResponse(`Failed to update waiting list entry`).generate();
   }
 }

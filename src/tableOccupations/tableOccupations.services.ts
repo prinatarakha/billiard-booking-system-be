@@ -3,7 +3,6 @@ import { BadRequestResponse, InternalServerErrorResponse, NotFoundResponse, Unpr
 import { log, logError } from "../commons/log";
 import { APIResponse, ErrorResponse } from "../commons/response";
 import * as DAO from "./tableOccupations.dao";
-// import { GetTablesResponse, TableResponse, UpdateTablesResponse } from "./tableOccupations.dto";
 import prismaClient from "../db";
 import * as TableDAO from "../tables/tables.dao";
 import dayjs from "dayjs";

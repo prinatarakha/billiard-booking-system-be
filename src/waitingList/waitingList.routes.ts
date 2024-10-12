@@ -9,6 +9,6 @@ router.post("/v1/waiting-list", validateRequest(DTO.CreateWaitingListEntryReques
 router.get("/v1/waiting-list", validateRequest(DTO.GetWaitingListEntriesRequest), Handlers.getWaitingListEntries);
 router.get("/v1/waiting-list/:id", validateRequest(DTO.GetWaitingListEntryRequest), Handlers.getWaitingListEntry);
 router.delete("/v1/waiting-list/:id", validateRequest(DTO.DeleteWaitingListEntryRequest), Handlers.deleteWaitingListEntry); // not recommended. Just update the status to cancelled
-// router.put("/v1/waiting-list", validateRequest(DTO.UpdateWaitingListEntriesRequest), Handlers.updateWaitingListEntries);
+router.put("/v1/waiting-list/:id", validateRequest(DTO.UpdateWaitingListEntryRequest), Handlers.updateWaitingListEntry);
 
 export default router;
