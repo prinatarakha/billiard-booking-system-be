@@ -43,3 +43,16 @@ export const deleteWaitingListEntry = async (req: Request, res: Response) => {
   const response = await Services.deleteWaitingListEntry(params);
   return res.status(response.status).json(response.data);
 }
+
+export const updateWaitingListEntry = async (req: Request, res: Response) => {
+  const params = { 
+    id: req.params.id as string,
+    customerName: req.body.customer_name as string | undefined, 
+    customerPhone: req.body.customer_phone as string | undefined,
+    tableId: req.body.table_id as string | null | undefined, 
+    tableOccupationId: req.body.table_occupation_id as string | null | undefined,
+    status: req.body.status as string | undefined,
+  };
+  const response = await Services.updateWaitingListEntry(params);
+  return res.status(response.status).json(response.data);
+}

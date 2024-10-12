@@ -63,3 +63,16 @@ export const deleteWaitingListEntry = async (params: {
   });
   return result;
 }
+
+export const updateWaitingListEntry = async (params: {
+  filters: Prisma.WaitingListWhereUniqueInput,
+  data: Prisma.WaitingListUpdateInput,
+  trx?: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+}) => {
+  if (!params.trx) params.trx = prismaClient;
+  const result = await params.trx.waitingList.update({
+    where: params.filters,
+    data: params.data,
+  });
+  return result;
+}

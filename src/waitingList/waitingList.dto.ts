@@ -85,3 +85,30 @@ export const DeleteWaitingListEntryRequest = z.object({
     id: z.string().uuid(),
   }),
 });
+
+export const UpdateWaitingListEntryRequest = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+  body: z.object({
+    customer_name: z.string().optional(),
+    customer_phone: z
+      .string()
+      .regex(/^\+?[1-9]\d{1,14}$/, {
+        message: "Invalid phone number format",
+      })
+      .optional(),
+    table_id: z.union([
+      z.string().uuid(), // set new table
+      z.null(), // remove preferred table
+    ]).optional(),
+    status: z.enum([
+      Object.values(Constants.WaitingListStatusEnums)[0], 
+      ...Object.values(Constants.WaitingListStatusEnums).slice(1)
+    ]).optional(),
+    table_occupation_id: z.union([
+      z.string().uuid(), // set new table occupation
+      z.null(), // remove table occupation
+    ]).optional(),
+  })
+})
