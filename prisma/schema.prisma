@@ -38,7 +38,7 @@ model WaitingList {
   id                String @id @unique @default(dbgenerated("gen_random_uuid()"))
   tableId           String? // optional, only if the customer is requesting for a specific table
   table             Table?   @relation(fields: [tableId], references: [id])
-  tableOccupationId   String? // optional
+  tableOccupationId   String? @unique // optional. Must be unique because an occupation represents 1 customer.
   tableOccupation   TableOccupation?   @relation(fields: [tableOccupationId], references: [id])
   status            String @default("queued")
   customerName      String
