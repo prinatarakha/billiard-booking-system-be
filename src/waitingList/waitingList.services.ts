@@ -59,23 +59,23 @@ export const getWaitingListEntries = async (params: {
   pageSize?: number, // same as "limit" in API request, and "take" in Prisma
   tableId?: string,
   statuses: string[],
-
-  // FIXME: filter by customer name and phone, createdAt
-  // customerName?: string,
-  // customerPhone?: string,
-  // day?: string, // the day of createdAt
+  customerName?: string,
+  customerPhone?: string,
+  startDate?: Date,
+  endDate?: Date,
 }) => {
   if (!params.page) params.page = 1;
   if (!params.pageSize) params.pageSize = 10;
-  if (!params.statuses.length) params.statuses.push(Constants.WaitingListStatusEnums.QUEUED); // default status query is "queued"
 
   log(`get_waiting_list_entries: params=${JSON.stringify(params)}`);
 
   try {
     const filters: Prisma.WaitingListWhereInput = {};
+
     if (params.tableId) {
       filters.tableId = params.tableId;
     }
+    
     if (params.statuses.length) {
       const andOperator = filters.AND 
         ? Array.isArray(filters.AND) ? filters.AND : [filters.AND]
@@ -90,6 +90,27 @@ export const getWaitingListEntries = async (params: {
       filters.AND = andOperator;
     }
 
+    if (params.customerName) {
+      filters.customerName = {
+        contains: params.customerName, // LIKE '%<name>%'
+        mode: 'insensitive', // case-insensitive
+      }
+    }
+
+    if (params.customerPhone) {
+      filters.customerPhone = {
+        contains: params.customerPhone, // LIKE '%<phone>%'
+        mode: 'insensitive', // case-insensitive
+      }
+    }
+
+    const createdAtFilter: Prisma.DateTimeFilter<"WaitingList"> = {
+      gte: params.startDate,
+      lte: params.endDate,
+    };
+    filters.createdAt = createdAtFilter;
+
+    // prioritize the oldest waiting list
     const sort = {
       fieldName: "createdAt",
       order: "asc",
