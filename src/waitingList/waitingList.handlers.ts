@@ -15,7 +15,7 @@ export const getWaitingListEntries = async (req: Request, res: Response) => {
   const statuses = req.query.statuses 
     ? (Array.isArray(req.query.statuses)
       ? req.query.statuses.join(",")
-      : req.query.statuses)
+      : req.query.statuses as string)
     : "";
 
   const params = { 
@@ -23,6 +23,10 @@ export const getWaitingListEntries = async (req: Request, res: Response) => {
     pageSize: req.query.limit ? parseInt(req.query.limit as string) : undefined, 
     tableId: req.query.table_id as string | undefined, 
     statuses: statuses ? (statuses as string).split(",") : [],
+    customerName: req.query.customer_name as string | undefined,
+    customerPhone: req.query.customer_phone as string | undefined,
+    startDate: req.query.start_date ? new Date(req.query.start_date as string) : undefined,
+    endDate: req.query.end_date ? new Date(req.query.end_date as string) : undefined,
   };
   const response = await Services.getWaitingListEntries(params);
   return res.status(response.status).json(response.data);
