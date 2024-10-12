@@ -30,7 +30,7 @@ export const createWaitingListEntry = async (params: {
 
     if (params.tableId) {
       const table = await TableDAO.getTable({ id: params.tableId });
-      if (!table) return new NotFoundResponse(`Table with id='${params.tableId}' is not found`);
+      if (!table) return new NotFoundResponse(`Table with id='${params.tableId}' is not found`).generate();
       waitingListEntryInput.table = { connect: {id: table.id } };
     }
 
@@ -285,8 +285,14 @@ export const updateWaitingListEntry = async (params: {
 
     // change table occupation
     if (params.tableOccupationId && waitingListEntry.tableOccupationId !== params.tableOccupationId) {
+      // check if table occupation exists
       const tableOccupation = await TableOccupationDAO.getTableOccupation({ filters: {id: params.tableOccupationId} });
       if (!tableOccupation) return new NotFoundResponse(`Table occupation with id='${params.tableOccupationId}' is not found`).generate();
+      
+      // check if other waiting list entry has been linked to the same table occupation
+      const otherEntry = await DAO.getWaitingListEntry({ filters: {tableOccupationId: params.tableOccupationId} });
+      if (otherEntry) return new UnprocessableEntityResponse(`Table occupation with id='${params.tableOccupationId}' has been linked to waiting list entry with id='${otherEntry.id}'`).generate();
+      
       waitingListEntry.tableOccupationId = params.tableOccupationId;
       isUpdated = true;
     }
