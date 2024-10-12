@@ -316,6 +316,9 @@ export const updateWaitingListEntry = async (params: {
 
     if (waitingListEntry.status !== Constants.WaitingListStatusEnums.FULFILLED) {
       // queued, cancelled, and expired status can't have table occupation
+      if (waitingListEntry.tableOccupationId)
+        log(`update_waiting_list_entry: changing entry with id='${waitingListEntry.id}' status to '${waitingListEntry.status}': removing table occupation with id='${waitingListEntry.tableOccupationId}'`);
+      
       waitingListEntry.tableOccupationId = null;
     }
 
