@@ -3,6 +3,7 @@ import { BadRequestResponse, InternalServerErrorResponse, NotFoundResponse, Unpr
 import { log, logError } from "../commons/log";
 import { APIResponse, ErrorResponse } from "../commons/response";
 import * as DAO from "./tableOccupations.dao";
+import * as Helpers from "./tableOccupations.helpers";
 import prismaClient from "../db";
 import * as TableDAO from "../tables/tables.dao";
 import dayjs from "dayjs";
@@ -30,22 +31,11 @@ export const occupyTable = async (params: {
     const table = await TableDAO.getTable({ id: params.tableId });
     if (!table) return new NotFoundResponse(`Table with id='${params.tableId}' is not found.`).generate();
 
-    const currentTableOccupations = await DAO.getTableOccupations({
-      filters: {
-        tableId: params.tableId,
-        startedAt: { lte: params.startedAt },
-        OR: [
-          { finishedAt: { gte: params.startedAt } },
-          { finishedAt: null }, // open table
-        ]
-      },
-      take: 1,
-    });
-
-    if (currentTableOccupations.length) {
-      const currentOccupation = currentTableOccupations[0];
-      return new UnprocessableEntityResponse(`Table with id='${currentOccupation.id}' is currently occupied ${currentOccupation.finishedAt ? `until ${currentOccupation.finishedAt.toISOString()}.`: 'with no time limit.'}`).generate();
-    }
+    const currentOccupation = await Helpers.getActiveTableOccupation({
+      tableId: params.tableId,
+      startedAt: params.startedAt ?? now,
+    })
+    if (currentOccupation) return new UnprocessableEntityResponse(`Table with id='${currentOccupation.tableId}' is currently occupied ${currentOccupation.finishedAt ? `until ${currentOccupation.finishedAt.toISOString()}.`: 'with no time limit.'}`).generate();
 
     const tableOccupation = await DAO.createTableOccupation({data: {
       startedAt: params.startedAt,
