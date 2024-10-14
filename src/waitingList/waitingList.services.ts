@@ -6,10 +6,12 @@ import * as DAO from "./waitingList.dao";
 import * as Constants from "./waitingList.constants";
 import * as TableDAO from "../tables/tables.dao";
 import * as TableOccupationDAO from "../tableOccupations/tableOccupations.dao";
+import * as TableOccupationHelpers from "../tableOccupations/tableOccupations.helpers";
 import { GetWaitingListEntriesResponse, WaitingListEntryResponse } from "./waitingList.dto";
 import prismaClient from "../db";
 import { TableResponse } from "../tables/tables.dto";
 import { TableOccupationResponse } from "../tableOccupations/tableOccupations.dto";
+import dayjs from "dayjs";
 
 export const createWaitingListEntry = async (params: {
   customerName: string,
@@ -359,5 +361,104 @@ export const updateWaitingListEntry = async (params: {
   } catch (err) {
     logError(`update_waiting_list_entry: params=${JSON.stringify(params)} - error: '${err}'`);
     return new InternalServerErrorResponse(`Failed to update waiting list entry`).generate();
+  }
+}
+
+export const fulfillWaitingListEntry = async (params: {
+  id: string,
+  tableId: string,
+  startedAt?: Date,
+  finishedAt?: Date,
+}) => {
+  const now = new Date();
+  if (!params.startedAt) params.startedAt = now;
+  log(`fulfill_waiting_list_entry: params=${JSON.stringify(params)}`);
+
+  try {
+    if (dayjs(params.startedAt).isBefore(dayjs(now))) {
+      return new UnprocessableEntityResponse(`'started_at' must be greater than or equal to the current time.`).generate();
+    }
+    if (params.finishedAt && dayjs(params.finishedAt).isBefore(dayjs(params.startedAt))) {
+      return new UnprocessableEntityResponse(`'finished_at' must be after ${params.startedAt.toISOString()}.`).generate();
+    }
+
+    const waitingListEntry = await DAO.getWaitingListEntry({ filters: {id: params.id} });
+    if (!waitingListEntry) {
+      log(`fulfill_waiting_list_entry: waiting list entry with id='${params.id}' is not found`);
+      return new NotFoundResponse(`Waiting list entry with id='${params.id}' is not found`).generate();
+    }
+
+    // can only fulfill waiting list entry with 'queued' status
+    if (waitingListEntry.status !== Constants.WaitingListStatusEnums.QUEUED) {
+      log(`fulfill_waiting_list_entry: can't fulfill waiting list entry with id='${params.id}' and status='${waitingListEntry.status}' (not 'queued')`);
+      return new UnprocessableEntityResponse(`Can't fulfill waiting list entry with id='${params.id}' and status not 'queued'`).generate();
+    }
+
+    const table = await TableDAO.getTable({ id: params.tableId });
+    if (!table) return new NotFoundResponse(`Table with id='${params.tableId}' is not found`).generate();
+    
+    const currentOccupation = await TableOccupationHelpers.getActiveTableOccupation({
+      tableId: params.tableId,
+      startedAt: params.startedAt ?? now,
+    })
+    if (currentOccupation) return new UnprocessableEntityResponse(`Table with id='${currentOccupation.tableId}' is currently occupied ${currentOccupation.finishedAt ? `until ${currentOccupation.finishedAt.toISOString()}.`: 'with no time limit.'}`).generate();
+    
+    const response: WaitingListEntryResponse = {
+      id: waitingListEntry.id,
+      customer_name: waitingListEntry.customerName,
+      customer_phone: waitingListEntry.customerPhone,
+      status: waitingListEntry.status,
+      table_id: waitingListEntry.tableId,
+      table_occupation_id: waitingListEntry.tableOccupationId,
+      created_at: waitingListEntry.createdAt,
+      updated_at: waitingListEntry.updatedAt,
+    }
+
+    await prismaClient.$transaction(async (trx) => {
+      const tableOccupation = await TableOccupationDAO.createTableOccupation({
+        data: {
+          startedAt: params.startedAt,
+          finishedAt: params.finishedAt,
+          table: { connect: {id: table.id } },
+        },
+        trx: trx,
+      });
+      log(`fulfill_waiting_list_entry: entry with id='${params.id}': created table occupation=${JSON.stringify(tableOccupation)}`);
+
+      waitingListEntry.tableOccupationId = tableOccupation.id;
+      waitingListEntry.status = Constants.WaitingListStatusEnums.FULFILLED;
+      waitingListEntry.updatedAt = new Date();
+
+      await DAO.updateWaitingListEntry({
+        filters: {id: params.id},
+        data: {
+          tableOccupation: waitingListEntry.tableOccupationId
+            ? { connect: {id: waitingListEntry.tableOccupationId } }
+            : { disconnect: true },
+          status: waitingListEntry.status,
+          updatedAt: waitingListEntry.updatedAt,
+        },
+        trx: trx,
+      });
+      log(`fulfill_waiting_list_entry: updated_entry=${JSON.stringify(waitingListEntry)}`);
+
+      response.table_occupation_id = waitingListEntry.tableOccupationId;
+      response.status = waitingListEntry.status;
+      response.updated_at = waitingListEntry.updatedAt;
+
+      response.table_occupation = {
+        id: tableOccupation.id,
+        table_id: tableOccupation.tableId,
+        started_at: tableOccupation.startedAt,
+        finished_at: tableOccupation.finishedAt,
+        created_at: tableOccupation.createdAt,
+        updated_at: tableOccupation.updatedAt,
+      } as TableOccupationResponse
+    });
+
+    return new APIResponse(200, response).generate();
+  } catch (err) {
+    logError(`fulfill_waiting_list_entry: params=${JSON.stringify(params)} - error: '${err}'`);
+    return new InternalServerErrorResponse(`Failed to fulfill waiting list entry`).generate();
   }
 }

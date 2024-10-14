@@ -60,3 +60,16 @@ export const updateWaitingListEntry = async (req: Request, res: Response) => {
   const response = await Services.updateWaitingListEntry(params);
   return res.status(response.status).json(response.data);
 }
+
+export const fulfillWaitingListEntry = async (req: Request, res: Response) => {
+  const startedAt = new Date(req.body.started_at);
+  const finishedAt = new Date(req.body.finished_at);
+  const params = { 
+    id: req.params.id as string,
+    tableId: req.body.table_id as string, 
+    startedAt: !isNaN(startedAt.getTime()) ? startedAt : undefined, 
+    finishedAt: !isNaN(finishedAt.getTime()) ? finishedAt : undefined, 
+  };
+  const response = await Services.fulfillWaitingListEntry(params);
+  return res.status(response.status).json(response.data);
+}
