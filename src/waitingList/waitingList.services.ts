@@ -79,16 +79,22 @@ export const getWaitingListEntries = async (params: {
     }
     
     if (params.statuses.length) {
-      const andOperator = filters.AND 
-        ? Array.isArray(filters.AND) ? filters.AND : [filters.AND]
-        : [];
+      const notInFilters: string[] = []; 
+      const inFilters: string[] = [];
+
       params.statuses.forEach((status) => {
-        if (status.charAt(0) === "!") {
-          andOperator.push({ NOT: {status: status}});
-        } else {
-          andOperator.push({status: status});
-        }
+        if (status.charAt(0) === "!") notInFilters.push(status.slice(1));
+        else inFilters.push(status);
       });
+
+      const andOperator = filters.AND 
+        ? (Array.isArray(filters.AND) ? filters.AND : [filters.AND])
+        : [];
+      andOperator.push({ status: {
+        in: inFilters,
+        notIn: notInFilters,
+      }})
+
       filters.AND = andOperator;
     }
 
