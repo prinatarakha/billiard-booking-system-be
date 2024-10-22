@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import tablesRoutes from './tables/tables.routes';
 import tableOccupationRoutes from './tableOccupations/tableOccupations.routes';
 import waitingListRoutes from './waitingList/waitingList.routes';
@@ -15,6 +16,7 @@ app.get("/", (req: Request, res: Response) => {
 })
 
 app.use(express.json());
+app.use(cors());
 // app.use(verifyAPIKey());
 app.use(tablesRoutes);
 app.use(tableOccupationRoutes);
