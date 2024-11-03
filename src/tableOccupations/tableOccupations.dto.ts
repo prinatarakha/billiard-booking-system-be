@@ -7,7 +7,7 @@ import { SORT_DIRECTIONS } from "../commons/constants";
 export const OccupyTableRequest = z.object({
   body: z.object({
     table_id: z.string().uuid(),
-    started_at: z.string().datetime({message: "must be in ISO string format. Example: '2023-09-28T14:45:00Z"}).optional(),
+    started_at: z.union([z.string().datetime({message: "must be in ISO string format. Example: '2023-09-28T14:45:00Z'"}).optional(), z.null()]),
     finished_at: z.string().datetime().optional(),
   })
 });
@@ -77,7 +77,10 @@ export const UpdateTableOccupationRequest = z.object({
   }),
   body: z.object({
     table_id: z.string().uuid().optional(),
-    started_at: z.string().datetime({message: "must be in ISO string format. Example: '2023-09-28T14:45:00Z"}).optional(),
-    finished_at: z.string().datetime().optional(),
+    started_at: z.string().datetime({message: "must be in ISO string format. Example: '2023-09-28T14:45:00Z'"}).optional(),
+    finished_at: z.union([
+      z.string().datetime({message: "must be in ISO string format. Example: '2023-09-28T14:45:00Z'"}),
+      z.null()
+    ]).optional(),
   })
 })

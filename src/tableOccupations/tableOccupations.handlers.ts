@@ -41,12 +41,14 @@ export const deleteTableOccupation = async (req: Request, res: Response) => {
 
 export const updateTableOccupation = async (req: Request, res: Response) => {
   const startedAt = new Date(req.body.started_at);
-  const finishedAt = new Date(req.body.finished_at);
+  const finishedAt = req.body.finished_at !== null ? new Date(req.body.finished_at) : null;
   const params = { 
     id: req.params.id,
     tableId: req.body.table_id, 
     startedAt: !isNaN(startedAt.getTime()) ? startedAt : undefined, 
-    finishedAt: !isNaN(finishedAt.getTime()) ? finishedAt : undefined, 
+    finishedAt: finishedAt !== null 
+      ? !isNaN(finishedAt.getTime()) ? finishedAt : undefined 
+      : null, // null is a valid value for finished_at for marking the occupation as open table
   };
   const response = await Services.updateTableOccupation(params);
   return res.status(response.status).json(response.data);

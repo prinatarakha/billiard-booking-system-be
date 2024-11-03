@@ -189,7 +189,7 @@ export const updateTableOccupation = async (params: {
   id: string,
   tableId?: string,
   startedAt?: Date,
-  finishedAt?: Date,
+  finishedAt?: Date | null,
 }) => {
   log(`update_table_occupation: params=${JSON.stringify(params)}`);
 
@@ -202,14 +202,35 @@ export const updateTableOccupation = async (params: {
     });
     if (!tableOccupation) return new NotFoundResponse(`Table occupation with id='${params.id}' is not found.`).generate();
 
+    let isStartedAtOrFinishedAtUpdated = false;
+
     if (params.startedAt && !dayjs(params.startedAt).isSame(dayjs(tableOccupation.startedAt), "second")) {
       isUpdated = true;
+      isStartedAtOrFinishedAtUpdated = true;
       tableOccupation.startedAt = params.startedAt;
     }
     
     if (params.finishedAt && !dayjs(params.finishedAt).isSame(dayjs(tableOccupation.finishedAt), "second")) {
       isUpdated = true;
+      isStartedAtOrFinishedAtUpdated = true;
       tableOccupation.finishedAt = params.finishedAt;
+    }
+
+    // null is a valid value for finished_at for marking the occupation as open table
+    if (params.finishedAt === null && tableOccupation.finishedAt) {
+      isUpdated = true;
+      isStartedAtOrFinishedAtUpdated = true;
+      tableOccupation.finishedAt = null;
+    }
+
+    if (isStartedAtOrFinishedAtUpdated) {
+      const currentOccupation = await Helpers.getActiveTableOccupation({
+        tableId: tableOccupation.tableId,
+        startedAt: tableOccupation.startedAt,
+        finishedAt: tableOccupation.finishedAt,
+        idIsNot: tableOccupation.id,
+      });
+      if (currentOccupation) return new UnprocessableEntityResponse(`Table with id='${currentOccupation.tableId}' is occupied from '${currentOccupation.startedAt.toISOString()}' ${currentOccupation.finishedAt ? `until '${currentOccupation.finishedAt.toISOString()}'.`: 'with no time limit.'}`).generate();
     }
 
     if (tableOccupation.finishedAt && dayjs(tableOccupation.finishedAt).isBefore(dayjs(tableOccupation.startedAt))) {
